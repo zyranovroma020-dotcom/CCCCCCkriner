@@ -4,6 +4,7 @@ import { getKline, TIMEFRAME_INTERVALS } from '../api/bybit'
 import { useScreenerStore } from '../store/screener'
 import type { TimeframeKey } from '../types'
 import type { KlineInterval } from '../api/bybit'
+import s from './MiniChart.module.css'
 
 // Кэш для данных графиков
 const chartDataCache = new Map<string, CandlestickData[]>()
@@ -184,15 +185,28 @@ export default function MiniChart({ symbol, timeframe, candleCount = 50, onExpan
   const volPctStr = volatility24hPct.toFixed(2) + '%'
 
   return (
-    <div className={className} style={{ background: 'var(--bg-panel)', borderRadius: 12, border: '1px solid var(--border)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ padding: '10px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 8 }}>
+    <div className={`${s.miniChart} ${className || ''}`}>
+      <div className={s.header}>
         <div>
-          <div style={{ fontWeight: 600, fontSize: 15 }}>{symbol.replace('USDT', '')}.F</div>
-          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
-            ОБ (24h): {volShort} · Изм (24h): <span className={change24hPct >= 0 ? 'green' : 'red'}>{changeStr}</span> · Вол (24h): {volPctStr}
+          <div className={s.symbol}>{symbol.replace('USDT', '')}.F</div>
+          <div className={s.stats}>
+            <div className={s.stat}>
+              <div className={s.statLabel}>ОБ (24h)</div>
+              <div className={s.statValue}>{volShort}</div>
+            </div>
+            <div className={s.stat}>
+              <div className={s.statLabel}>Изм (24h)</div>
+              <div className={`${s.statValue} ${change24hPct >= 0 ? s.positive : s.negative}`}>
+                {changeStr}
+              </div>
+            </div>
+            <div className={s.stat}>
+              <div className={s.statLabel}>Вол (24h)</div>
+              <div className={s.statValue}>{volPctStr}</div>
+            </div>
           </div>
         </div>
-        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+        <div className={s.actions}>
           <button
             onClick={() => {
               if (isFav) {
@@ -201,16 +215,7 @@ export default function MiniChart({ symbol, timeframe, candleCount = 50, onExpan
                 addFavoriteCoin(symbol)
               }
             }}
-            style={{
-              padding: '4px 8px',
-              borderRadius: '6px',
-              background: 'transparent',
-              border: '1px solid var(--border)',
-              color: isFav ? '#fbbf24' : '#666',
-              cursor: 'pointer',
-              fontSize: '14px',
-              transition: 'all 0.2s'
-            }}
+            className={s.favoriteBtn}
             title={isFav ? 'Удалить из избранного' : 'Добавить в избранное'}
           >
             {isFav ? '★' : '☆'}
@@ -218,27 +223,8 @@ export default function MiniChart({ symbol, timeframe, candleCount = 50, onExpan
           {onExpand && (
             <button 
               onClick={onExpand} 
-              style={{ 
-                padding: '6px 8px', 
-                borderRadius: '6px', 
-                background: 'transparent',
-                border: '1px solid var(--border)',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                transition: 'all 0.2s',
-                color: 'var(--text-muted)'
-              }} 
+              className={s.expandBtn}
               title="Развернуть"
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'var(--bg-hover)'
-                e.currentTarget.style.color = 'var(--text)'
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'transparent'
-                e.currentTarget.style.color = 'var(--text-muted)'
-              }}
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2 2v-3M3 16h3a2 2 0 0 0 2 2v3m-18 0V5a2 2 0 0 0-2-2" />
@@ -247,48 +233,16 @@ export default function MiniChart({ symbol, timeframe, candleCount = 50, onExpan
           )}
         </div>
       </div>
-      <div style={{ flex: 1, minHeight: 160, position: 'relative' }}>
+      <div className={s.chartContainer}>
         {!dataLoaded && (
-          <div style={{ 
-            position: 'absolute', 
-            top: '50%', 
-            left: '50%', 
-            transform: 'translate(-50%, -50%)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '8px 16px',
-            background: 'var(--bg-panel)',
-            border: '1px solid var(--border)',
-            borderRadius: '8px',
-            fontSize: '12px',
-            color: 'var(--text-muted)',
-            zIndex: 10
-          }}>
-            <div style={{ 
-              width: '16px', 
-              height: '16px', 
-              border: '2px solid var(--border)', 
-              borderTop: '2px solid var(--accent)',
-              borderRadius: '50%',
-              animation: `${spin} 0.5s linear infinite` // Ускорили анимацию
-            }} />
-            <span>Загрузка...</span> {/* Укоротили текст */}
+          <div className={s.loadingOverlay}>
+            <div className={s.spinner} />
+            <span>Загрузка...</span>
           </div>
         )}
-        <div ref={containerRef} style={{ flex: 1, minHeight: 160 }} />
+        <div ref={containerRef} className={s.chartCanvas} />
         {dataLoaded && (
-          <div style={{ 
-            position: 'absolute', 
-            bottom: '8px', 
-            right: '8px',
-            padding: '4px 8px',
-            background: 'rgba(0,0,0,0.7)',
-            color: 'white',
-            borderRadius: '4px',
-            fontSize: '10px',
-            zIndex: 5
-          }}>
+          <div className={s.symbolLabel}>
             {symbol}
           </div>
         )}

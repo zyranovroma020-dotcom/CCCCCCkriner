@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
-import { LayoutGrid, User, Globe, Clock, RefreshCw } from 'lucide-react'
+import { LayoutGrid, User, Globe, Clock, RefreshCw, Menu, X } from 'lucide-react'
 import { useScreenerStore, type LayoutColumns } from '../store/screener'
 import type { TimeframeKey } from '../types'
 import Notifications from './Notifications'
@@ -27,6 +27,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
   } = useScreenerStore()
   const timeframes = ['1m', '5m', '15m', '1h', '4h', '1d'] as const
   const [layoutOpen, setLayoutOpen] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   // Запускаем умные оповещения
   useSmartAlerts()
@@ -43,6 +44,12 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
               </NavLink>
             ))}
           </nav>
+          <button 
+            className={s.mobileMenuBtn}
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          >
+            {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
         </div>
         <div className={s.headerRight}>
           <Notifications />
@@ -97,6 +104,26 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
           </button>
         </div>
       </header>
+      
+      {/* Mobile menu */}
+      {mobileMenuOpen && (
+        <>
+          <div className={s.mobileMenuBackdrop} onClick={() => setMobileMenuOpen(false)} />
+          <nav className={s.mobileMenu}>
+            {TABS.map(({ to, label }) => (
+              <NavLink 
+                key={to} 
+                to={to} 
+                className={({ isActive }) => [s.mobileMenuTab, isActive && s.mobileMenuTabActive].filter(Boolean).join(' ')}
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                {label}
+              </NavLink>
+            ))}
+          </nav>
+        </>
+      )}
+      
       <main className={s.main}>
         {children ?? <Outlet />}
       </main>
