@@ -83,7 +83,16 @@ export default function Coins() {
     if (!chartRef.current || !symbol) return
     const chart = createChart(chartRef.current, {
       layout: { background: { color: '#13161e' }, textColor: '#8b92a0' },
-      grid: { vertLines: { color: 'rgba(255,255,255,0.05)' }, horzLines: { color: 'rgba(255,255,255,0.05)' } },
+      grid: { 
+        vertLines: { 
+          color: 'rgba(255,255,255,0.05)',
+          style: 0 // сплошная линия
+        }, 
+        horzLines: { 
+          color: 'rgba(255,255,255,0.05)',
+          style: 0 // сплошная линия
+        } 
+      },
       width: chartRef.current.clientWidth,
       height: Math.max(400, chartRef.current.clientHeight || 500),
       rightPriceScale: { borderVisible: false, scaleMargins: { top: 0.1, bottom: 0.2 } },

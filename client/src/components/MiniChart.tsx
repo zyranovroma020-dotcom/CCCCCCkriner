@@ -36,7 +36,17 @@ export default function MiniChart({ symbol, timeframe, candleCount = 50, onExpan
     
     const chart = createChart(containerRef.current, {
       layout: { background: { color: 'transparent' }, textColor: '#8b92a0' },
-      grid: { vertLines: { visible: false }, horzLines: { color: 'rgba(255,255,255,0.05)' } },
+      grid: { 
+        vertLines: { 
+          visible: true, 
+          color: 'rgba(255,255,255,0.03)',
+          style: 0 // сплошная линия
+        }, 
+        horzLines: { 
+          color: 'rgba(255,255,255,0.05)',
+          style: 0 // сплошная линия
+        } 
+      },
       width: containerRef.current.clientWidth,
       height: 180,
       rightPriceScale: { borderVisible: false, scaleMargins: { top: 0.1, bottom: 0.2 } },
