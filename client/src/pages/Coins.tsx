@@ -108,7 +108,7 @@ export default function Coins() {
         } 
       },
       width: chartRef.current.clientWidth,
-      height: Math.max(400, chartRef.current.clientHeight || 500),
+      height: Math.max(500, chartRef.current.clientHeight || 600),
       rightPriceScale: { borderVisible: false, scaleMargins: { top: 0.1, bottom: 0.2 } },
       timeScale: { borderVisible: false, timeVisible: true },
     })

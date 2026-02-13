@@ -10,6 +10,7 @@ interface DensityLevel {
   densityRatio: number // Соотношение плотности к общему объему
   turnover24h: number
   supportStrength: 'weak' | 'medium' | 'strong'
+  symbol: string // Добавляем поле symbol
 }
 
 interface DensityFilters {
@@ -25,7 +26,6 @@ const TOP_SYMBOLS_BY_VOLUME = 50
 const MIN_DENSITY_RATIO = 1.5 // Плотность должна быть в 1.5 раза выше среднего
 
 export default function DensityMap() {
-  const [selectedSymbol, setSelectedSymbol] = useState('BTCUSDT')
   const [symbols, setSymbols] = useState<string[]>([])
   const [densityLevels, setDensityLevels] = useState<DensityLevel[]>([])
   const [loading, setLoading] = useState(false)
@@ -49,90 +49,119 @@ export default function DensityMap() {
     })
   }, [])
 
-  // Загружаем данные плотности для выбранного символа
-  const fetchDensityData = async () => {
+  // Загружаем данные плотности для всех символов
+  const fetchAllDensityData = async () => {
     setLoading(true)
     try {
-      // Получаем order book
-      const orderbookResponse = await fetch(`https://api.bybit.com/v5/market/orderbook?symbol=${selectedSymbol}&category=linear&limit=1000`)
-      const orderbook = await orderbookResponse.json()
-      
-      if (!orderbook.result || !orderbook.result.b || !orderbook.result.a) {
-        console.error('Invalid orderbook data')
-        return
-      }
-
-      // Получаем текущие данные о объеме
       const tickersResponse = await getTickersLinear()
-      const ticker = tickersResponse.list.find((t: any) => t.symbol === selectedSymbol)
-      const turnover24h = ticker ? parseFloat(ticker.turnover24h) : 0
-      const currentPrice = ticker ? parseFloat(ticker.lastPrice) : 0
+      const topSymbols = tickersResponse.list.slice(0, 30).map((t: any) => t.symbol)
+      
+      const densityPromises = topSymbols.map(async (symbol) => {
+        try {
+          // Получаем order book
+          const orderbookResponse = await fetch(`https://api.bybit.com/v5/market/orderbook?symbol=${symbol}&category=linear&limit=1000`)
+          const orderbook = await orderbookResponse.json()
+          
+          if (!orderbook.result || !orderbook.result.b || !orderbook.result.a) {
+            console.error('Invalid orderbook data for', symbol)
+            return null
+          }
 
-      const bids = orderbook.result.b // Buy ордера (поддержка)
-      const asks = orderbook.result.a // Sell ордера (сопротивление)
+          // Получаем текущие данные о объеме
+          const ticker = tickersResponse.list.find((t: any) => t.symbol === symbol)
+          const turnover24h = ticker ? parseFloat(ticker.turnover24h) : 0
+          const currentPrice = ticker ? parseFloat(ticker.lastPrice) : 0
 
-      const densityData: DensityLevel[] = []
+          const bids = orderbook.result.b // Buy ордера (поддержка)
+          const asks = orderbook.result.a // Sell ордера (сопротивление)
 
-      // Анализируем buy side (уровни поддержки)
-      for (let i = 0; i < Math.min(bids.length, 200); i++) {
-        const price = parseFloat(bids[i][0])
-        const volume = parseFloat(bids[i][1])
-        const distanceFromCurrent = Math.abs((price - currentPrice) / currentPrice) * 100
+          const densityData: DensityLevel[] = []
 
-        // Рассчитываем локальную плотность - сумма объемов в окне вокруг этого уровня
-        let localDensity = volume
-        for (let j = Math.max(0, i - 5); j < Math.min(i + 5, bids.length); j++) {
-          localDensity += parseFloat(bids[j][1])
+          // Анализируем buy side (уровни поддержки)
+          for (let i = 0; i < Math.min(bids.length, 200); i++) {
+            const price = parseFloat(bids[i][0])
+            const volume = parseFloat(bids[i][1])
+            const distanceFromCurrent = Math.abs((price - currentPrice) / currentPrice) * 100
+
+            // Рассчитываем локальную плотность - сумма объемов в окне вокруг этого уровня
+            let localDensity = volume
+            for (let j = Math.max(0, i - 5); j < Math.min(i + 5, bids.length); j++) {
+              localDensity += parseFloat(bids[j][1])
+            }
+
+            // Рассчитываем соотношение плотности к общему объему
+            const densityRatio = turnover24h > 0 ? localDensity / (turnover24h / 1440) : 0 // Объем в минуту
+
+            // Определяем силу поддержки
+            let supportStrength: 'weak' | 'medium' | 'strong' = 'weak'
+            if (densityRatio >= 3.0) supportStrength = 'strong'
+            else if (densityRatio >= 1.5) supportStrength = 'medium'
+
+            densityData.push({
+              price,
+              volume,
+              side: 'buy',
+              density: localDensity,
+              densityRatio,
+              turnover24h,
+              supportStrength,
+              symbol // Добавляем symbol
+            })
+          }
+
+          // Анализируем sell side (уровни сопротивления)
+          for (let i = 0; i < Math.min(asks.length, 200); i++) {
+            const price = parseFloat(asks[i][0])
+            const volume = parseFloat(asks[i][1])
+            const distanceFromCurrent = Math.abs((price - currentPrice) / currentPrice) * 100
+
+            let localDensity = volume
+            for (let j = Math.max(0, i - 5); j < Math.min(i + 5, asks.length); j++) {
+              localDensity += parseFloat(asks[j][1])
+            }
+
+            const densityRatio = turnover24h > 0 ? localDensity / (turnover24h / 1440) : 0
+
+            let supportStrength: 'weak' | 'medium' | 'strong' = 'weak'
+            if (densityRatio >= 3.0) supportStrength = 'strong'
+            else if (densityRatio >= 1.5) supportStrength = 'medium'
+
+            densityData.push({
+              price,
+              volume,
+              side: 'sell',
+              density: localDensity,
+              densityRatio,
+              turnover24h,
+              supportStrength,
+              symbol // Добавляем symbol
+            })
+          }
+
+          return {
+            symbol,
+            densityLevels,
+            maxDensity: Math.max(...densityData.map(d => d.density)),
+            avgVolume: turnover24h
+          }
+        } catch (error) {
+          console.error(`Error fetching density for ${symbol}:`, error)
+          return null
         }
-
-        // Рассчитываем соотношение плотности к общему объему
-        const densityRatio = turnover24h > 0 ? localDensity / (turnover24h / 1440) : 0 // Объем в минуту
-
-        // Определяем силу поддержки
-        let supportStrength: 'weak' | 'medium' | 'strong' = 'weak'
-        if (densityRatio >= 3.0) supportStrength = 'strong'
-        else if (densityRatio >= 1.5) supportStrength = 'medium'
-
-        densityData.push({
-          price,
-          volume,
-          side: 'buy',
-          density: localDensity,
-          densityRatio,
-          turnover24h,
-          supportStrength
-        })
-      }
-
-      // Анализируем sell side (уровни сопротивления)
-      for (let i = 0; i < Math.min(asks.length, 200); i++) {
-        const price = parseFloat(asks[i][0])
-        const volume = parseFloat(asks[i][1])
-        const distanceFromCurrent = Math.abs((price - currentPrice) / currentPrice) * 100
-
-        let localDensity = volume
-        for (let j = Math.max(0, i - 5); j < Math.min(i + 5, asks.length); j++) {
-          localDensity += parseFloat(asks[j][1])
+      })
+      
+      const results = await Promise.all(densityPromises)
+      const validResults = results.filter(r => r !== null)
+      
+      // Объединяем все данные для отображения
+      const allDensityData: DensityLevel[] = []
+      validResults.forEach(result => {
+        if (result) {
+          allDensityData.push(...result.densityLevels)
         }
-
-        const densityRatio = turnover24h > 0 ? localDensity / (turnover24h / 1440) : 0
-
-        let supportStrength: 'weak' | 'medium' | 'strong' = 'weak'
-        if (densityRatio >= 3.0) supportStrength = 'strong'
-        else if (densityRatio >= 1.5) supportStrength = 'medium'
-
-        densityData.push({
-          price,
-          volume,
-          side: 'sell',
-          density: localDensity,
-          densityRatio,
-          turnover24h,
-          supportStrength
-        })
-      }
-
-      setDensityLevels(densityData)
+      })
+      
+      setDensityLevels(allDensityData)
     } catch (error) {
       console.error('Error fetching density data:', error)
     } finally {
@@ -161,16 +190,16 @@ export default function DensityMap() {
   }, [filteredData])
 
   useEffect(() => {
-    if (selectedSymbol) {
-      fetchDensityData()
+    if (symbols.length > 0) {
+      fetchAllDensityData()
     }
-  }, [selectedSymbol])
+  }, [filters])
 
   // Автообновление каждые 30 секунд
   useEffect(() => {
-    const interval = setInterval(fetchDensityData, 30000)
+    const interval = setInterval(fetchAllDensityData, 30000)
     return () => clearInterval(interval)
-  }, [selectedSymbol])
+  }, [filters])
 
   const getStrengthColor = (strength: string) => {
     switch (strength) {
@@ -190,17 +219,8 @@ export default function DensityMap() {
       <div className={s.header}>
         <h2>🎯 Карта плотностей ордеров</h2>
         <div className={s.controls}>
-          <select 
-            value={selectedSymbol} 
-            onChange={(e) => setSelectedSymbol(e.target.value)}
-            disabled={loading}
-          >
-            {symbols.map(sym => (
-              <option key={sym} value={sym}>{sym.replace('USDT', '')}</option>
-            ))}
-          </select>
-          <button onClick={fetchDensityData} disabled={loading}>
-            {loading ? '🔄 Загрузка...' : '🔄 Обновить'}
+          <button onClick={fetchAllDensityData} disabled={loading}>
+            {loading ? '🔄 Загрузка...' : '🔄 Обновить все'}
           </button>
         </div>
       </div>
@@ -277,7 +297,7 @@ export default function DensityMap() {
         ) : sortedData.length === 0 ? (
           <div className={s.noResults}>
             <p>🔍 Уровни с высокой плотностью не найдены</p>
-            <p>Попробуйте уменьшить фильтры или выберите другую монету</p>
+            <p>Попробуйте уменьшить фильтры или обновите данные</p>
           </div>
         ) : (
           <div className={s.densityTable}>
@@ -290,9 +310,9 @@ export default function DensityMap() {
               <div>Сила</div>
               <div>Сторона</div>
             </div>
-            {sortedData.slice(0, 50).map((level, index) => (
+            {sortedData.slice(0, 100).map((level, index) => (
               <div key={index} className={s.tableRow}>
-                <div>{selectedSymbol.replace('USDT', '')}</div>
+                <div>{level.symbol ? level.symbol.replace('USDT', '') : 'N/A'}</div>
                 <div>{level.price.toFixed(4)}</div>
                 <div>{(level.volume / 1000000).toFixed(2)}M</div>
                 <div>{(level.density / 1000000).toFixed(2)}M</div>
@@ -316,6 +336,7 @@ export default function DensityMap() {
           <li><strong>Высокая плотность</strong> - уровень где цена может оттолкнуться или пробить</li>
           <li><strong>Зеленые уровни</strong> - поддержка (buy ордера)</li>
           <li><strong>Красные уровни</strong> - сопротивление (sell ордера)</li>
+          <li><strong>Поиск по всем монетам</strong> - анализ топ-30 монет по объему</li>
         </ul>
       </div>
     </div>

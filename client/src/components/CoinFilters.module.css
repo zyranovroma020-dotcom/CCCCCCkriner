@@ -1,53 +1,75 @@
 /* CoinFilters.css */
 .coin-filters {
   margin-bottom: 16px;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 8px;
-  padding: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: linear-gradient(135deg, rgba(13, 20, 33, 0.95), rgba(13, 20, 33, 0.85));
+  border-radius: 12px;
+  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .filters-header {
   display: flex;
-  gap: 8px;
+  gap: 12px;
   align-items: center;
   flex-wrap: wrap;
+  margin-bottom: 16px;
 }
 
 .search-input {
   flex: 1;
-  min-width: 200px;
-  padding: 8px 12px;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 6px;
+  min-width: 250px;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
   color: white;
   font-size: 14px;
   outline: none;
-  transition: all 0.2s;
+  transition: all 0.3s ease;
+  font-weight: 500;
 }
 
 .search-input:focus {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.4);
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(76, 175, 80, 0.6);
+  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.2);
+  transform: translateY(-1px);
 }
 
 .search-input::placeholder {
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(255, 255, 255, 0.7);
+  font-style: italic;
 }
 
 .toggle-filters-btn,
 .reset-filters-btn {
-  padding: 8px 16px;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 6px;
+  padding: 10px 18px;
+  background: linear-gradient(135deg, rgba(76, 175, 80, 0.8), rgba(76, 175, 80, 0.6));
+  border: 2px solid rgba(76, 175, 80, 0.4);
+  border-radius: 8px;
   color: white;
-  font-size: 12px;
+  font-size: 13px;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s ease;
   white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.toggle-filters-btn:hover,
+.reset-filters-btn:hover {
+  background: linear-gradient(135deg, rgba(76, 175, 80, 0.9), rgba(76, 175, 80, 0.7));
+  border-color: rgba(76, 175, 80, 0.6);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(76, 175, 80, 0.2);
+}
+
+.toggle-filters-btn:active,
+.reset-filters-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(76, 175, 80, 0.2);
 }
 
 .toggle-filters-btn:hover,
@@ -57,22 +79,47 @@
 }
 
 .filters-content {
-  margin-top: 12px;
+  margin-top: 16px;
   display: grid;
-  gap: 12px;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .filter-group {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: all 0.2s ease;
+}
+
+.filter-group:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.15);
 }
 
 .filter-group label {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.8);
-  font-weight: 500;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 600;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .range-inputs {
@@ -83,26 +130,27 @@
 
 .range-inputs input {
   flex: 1;
-  padding: 6px 8px;
-  background: rgba(255, 255, 255, 0.1);
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 4px;
+  border-radius: 6px;
   color: white;
-  font-size: 12px;
+  font-size: 13px;
   outline: none;
-  transition: all 0.2s;
-  min-width: 80px;
+  transition: all 0.2s ease;
+  font-weight: 500;
 }
 
 .range-inputs input:focus {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(76, 175, 80, 0.6);
+  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.1);
 }
 
 .range-inputs span {
-  color: rgba(255, 255, 255, 0.6);
-  font-size: 12px;
-  font-weight: 500;
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 600;
+  font-size: 14px;
 }
 
 .range-inputs input::placeholder {
@@ -115,6 +163,7 @@
   .filters-header {
     flex-direction: column;
     align-items: stretch;
+    gap: 12px;
   }
   
   .search-input {
@@ -123,13 +172,16 @@
   
   .filters-content {
     grid-template-columns: 1fr;
+    gap: 12px;
   }
   
   .range-inputs {
     flex-wrap: wrap;
+    gap: 6px;
   }
   
   .range-inputs input {
     min-width: 70px;
+    font-size: 12px;
   }
 }
