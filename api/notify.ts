@@ -1,4 +1,4 @@
-export async function POST(request) {
+export async function POST(request: Request) {
   try {
     const { telegramChatId, text } = await request.json()
 
