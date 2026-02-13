@@ -30,12 +30,20 @@ interface TypeConfig {
 }
 
 const TYPE_CONFIGS: Record<string, TypeConfig> = {
-  price_change: {
-    name: 'Изменение цены 24ч',
-    description: 'Уведомление при изменении цены за 24 часа',
+  price_increase: {
+    name: 'Рост цены',
+    description: 'Уведомление при росте цены',
     requiresSymbol: true,
     params: [
-      { key: 'thresholdPct', label: 'Порог изменения (%)', type: 'number', default: 5, min: 0.1, max: 100 }
+      { key: 'thresholdPct', label: 'Порог роста (%)', type: 'number', default: 5, min: 0.1, max: 100 }
+    ]
+  },
+  price_decrease: {
+    name: 'Падение цены',
+    description: 'Уведомление при падении цены',
+    requiresSymbol: true,
+    params: [
+      { key: 'thresholdPct', label: 'Порог падения (%)', type: 'number', default: 5, min: 0.1, max: 100 }
     ]
   },
   price_change_short_term: {

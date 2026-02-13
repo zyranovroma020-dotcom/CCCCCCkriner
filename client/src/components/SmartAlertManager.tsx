@@ -10,7 +10,7 @@ export default function SmartAlertManager() {
   const [selectedAlert, setSelectedAlert] = useState<SmartAlert | null>(null)
   const [formData, setFormData] = useState({
     name: '',
-    type: 'price_change' as SmartAlert['type'],
+    type: 'price_increase' as SmartAlert['type'],
     timePeriod: '2h' as SmartAlert['timePeriod'],
     threshold: 20,
     minVolume: 0,
@@ -23,7 +23,7 @@ export default function SmartAlertManager() {
     setSelectedAlert(null)
     setFormData({
       name: '',
-      type: 'price_change',
+      type: 'price_increase',
       timePeriod: '2h',
       threshold: 20,
       minVolume: 0,
@@ -53,7 +53,7 @@ export default function SmartAlertManager() {
     }
     setFormData({
       name: '',
-      type: 'price_change',
+      type: 'price_increase',
       timePeriod: '2h',
       threshold: 20,
       minVolume: 0,
@@ -83,7 +83,8 @@ export default function SmartAlertManager() {
   
   const getTypeLabel = (type: SmartAlert['type']) => {
     switch (type) {
-      case 'price_change': return 'Изменение цены'
+      case 'price_increase': return 'Рост цены'
+      case 'price_decrease': return 'Падение цены'
       case 'volatility': return 'Волатильность'
       case 'volume_spike': return 'Всплеск объема'
       case 'density_appearance': return 'Появление плотности'
@@ -144,7 +145,8 @@ export default function SmartAlertManager() {
                     value={formData.type}
                     onChange={(e) => setFormData({ ...formData, type: e.target.value as SmartAlert['type'] })}
                   >
-                    <option value="price_change">Изменение цены</option>
+                    <option value="price_increase">Рост цены</option>
+                    <option value="price_decrease">Падение цены</option>
                     <option value="volatility">Волатильность</option>
                     <option value="volume_spike">Всплеск объема</option>
                     <option value="density_appearance">Плотность</option>

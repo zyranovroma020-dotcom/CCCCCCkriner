@@ -117,11 +117,10 @@ export function useSmartAlerts() {
 
         // Проверяем разные типы оповещений
         switch (alert.type) {
-          case 'price_change':
+          case 'price_increase':
             if (alert.timePeriod === '24h') {
               for (const coin of eligibleCoins) {
-                const pct = Math.abs(coin.priceChange24h)
-                if (pct >= alert.threshold) triggeredSymbols.push(coin.symbol)
+                if (coin.priceChange24h >= alert.threshold) triggeredSymbols.push(coin.symbol)
               }
             } else {
               const timeMs = getTimePeriodMs(alert.timePeriod)
@@ -129,7 +128,26 @@ export function useSmartAlerts() {
               const checks = await mapLimit(
                 coins,
                 KLINE_CONCURRENCY,
-                async (coin) => (await checkPriceChangeForCoin(alert, coin.symbol, timeMs)) ? coin.symbol : null
+                async (coin) => (await checkPriceIncreaseForCoin(alert, coin.symbol, timeMs)) ? coin.symbol : null
+              )
+              for (const sym of checks) {
+                if (sym) triggeredSymbols.push(sym)
+              }
+            }
+            break
+
+          case 'price_decrease':
+            if (alert.timePeriod === '24h') {
+              for (const coin of eligibleCoins) {
+                if (coin.priceChange24h <= -alert.threshold) triggeredSymbols.push(coin.symbol)
+              }
+            } else {
+              const timeMs = getTimePeriodMs(alert.timePeriod)
+              const coins = eligibleCoins.slice(0, MAX_KLINE_COINS_PER_ALERT)
+              const checks = await mapLimit(
+                coins,
+                KLINE_CONCURRENCY,
+                async (coin) => (await checkPriceDecreaseForCoin(alert, coin.symbol, timeMs)) ? coin.symbol : null
               )
               for (const sym of checks) {
                 if (sym) triggeredSymbols.push(sym)
@@ -228,7 +246,7 @@ export function useSmartAlerts() {
     }
   }
 
-  const checkPriceChangeForCoin = async (alert: SmartAlert, symbol: string, timeMs: number): Promise<boolean> => {
+  const checkPriceIncreaseForCoin = async (alert: SmartAlert, symbol: string, timeMs: number): Promise<boolean> => {
     try {
       const interval = getIntervalForTimePeriod(alert.timePeriod)
       const limit = Math.ceil(timeMs / (60 * 1000))
@@ -239,10 +257,29 @@ export function useSmartAlerts() {
       const candles = klineResponse.list
       const oldPrice = parseFloat(candles[0][4])
       const currentPrice = parseFloat(candles[candles.length - 1][4])
-      const priceChange = Math.abs(((currentPrice - oldPrice) / oldPrice) * 100)
+      const priceChange = ((currentPrice - oldPrice) / oldPrice) * 100
       return priceChange >= alert.threshold
     } catch (error) {
-      console.error(`Error checking price change for ${symbol}:`, error)
+      console.error(`Error checking price increase for ${symbol}:`, error)
+      return false
+    }
+  }
+
+  const checkPriceDecreaseForCoin = async (alert: SmartAlert, symbol: string, timeMs: number): Promise<boolean> => {
+    try {
+      const interval = getIntervalForTimePeriod(alert.timePeriod)
+      const limit = Math.ceil(timeMs / (60 * 1000))
+
+      const klineResponse = await getKline(symbol, interval, Math.min(limit, 100))
+      if (!klineResponse.list || klineResponse.list.length < 2) return false
+
+      const candles = klineResponse.list
+      const oldPrice = parseFloat(candles[0][4])
+      const currentPrice = parseFloat(candles[candles.length - 1][4])
+      const priceChange = ((currentPrice - oldPrice) / oldPrice) * 100
+      return priceChange <= -alert.threshold
+    } catch (error) {
+      console.error(`Error checking price decrease for ${symbol}:`, error)
       return false
     }
   }
@@ -362,8 +399,10 @@ async function mapLimit<T, R>(items: T[], limit: number, fn: (item: T) => Promis
 
 function getAlertIcon(type: SmartAlert['type']): string {
   switch (type) {
-    case 'price_change':
-      return '🚀'
+    case 'price_increase':
+      return '📈'
+    case 'price_decrease':
+      return '�'
     case 'volatility':
       return '📊'
     case 'volume_spike':
@@ -377,8 +416,10 @@ function getAlertIcon(type: SmartAlert['type']): string {
 
 function getTypeLabel(alert: SmartAlert): string {
   switch (alert.type) {
-    case 'price_change':
-      return `Изменение цены ≥ ${alert.threshold}%`
+    case 'price_increase':
+      return `Рост цены ≥ ${alert.threshold}%`
+    case 'price_decrease':
+      return `Падение цены ≥ ${alert.threshold}%`
     case 'volatility':
       return `Волатильность ≥ ${alert.threshold}%`
     case 'volume_spike':

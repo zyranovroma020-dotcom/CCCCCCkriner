@@ -18,7 +18,8 @@ export interface CoinMetric extends TickerLinear {
 export type AlertType =
   | 'price_cross'
   | 'density'
-  | 'price_change'
+  | 'price_increase'
+  | 'price_decrease'
   | 'price_change_short_term'
   | 'btc_correlation'
   | 'volatility'

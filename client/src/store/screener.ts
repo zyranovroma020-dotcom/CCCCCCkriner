@@ -45,7 +45,7 @@ export interface PriceAlert {
 export interface SmartAlert {
   id: string
   name: string
-  type: 'price_change' | 'volatility' | 'volume_spike' | 'density_appearance'
+  type: 'price_increase' | 'price_decrease' | 'volatility' | 'volume_spike' | 'density_appearance'
   timePeriod: '1h' | '2h' | '3h' | '6h' | '10h' | '16h' | '24h'
   threshold: number
   minVolume?: number

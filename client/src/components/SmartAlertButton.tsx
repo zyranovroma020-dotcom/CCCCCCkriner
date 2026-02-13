@@ -54,8 +54,10 @@ export default function SmartAlertButton({ symbol, className }: SmartAlertButton
 
   const getTypeLabel = (type: SmartAlert['type']) => {
     switch (type) {
-      case 'price_change':
-        return 'Изменение цены'
+      case 'price_increase':
+        return 'Рост цены'
+      case 'price_decrease':
+        return 'Падение цены'
       case 'volatility':
         return 'Волатильность'
       case 'volume_spike':
@@ -154,9 +156,15 @@ export default function SmartAlertButton({ symbol, className }: SmartAlertButton
               <div className={s.actionButtons}>
                 <button 
                   className={s.actionButton}
-                  onClick={() => handleQuickAlert('price_change')}
+                  onClick={() => handleQuickAlert('price_increase')}
                 >
-                  🚀 Рост цены
+                  � Рост цены
+                </button>
+                <button 
+                  className={s.actionButton}
+                  onClick={() => handleQuickAlert('price_decrease')}
+                >
+                  📉 Падение цены
                 </button>
                 <button 
                   className={s.actionButton}
