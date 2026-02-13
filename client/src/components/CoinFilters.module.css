@@ -1,5 +1,5 @@
 /* CoinFilters.css */
-.coin-filters {
+.coinFilters {
   margin-bottom: 16px;
   background: var(--bg-panel);
   border-radius: 12px;
@@ -8,7 +8,7 @@
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-.filters-header {
+.filtersHeader {
   display: flex;
   gap: 12px;
   align-items: center;
@@ -16,7 +16,7 @@
   margin-bottom: 16px;
 }
 
-.search-input {
+.searchInput {
   flex: 1;
   min-width: 250px;
   padding: 8px 14px;
@@ -28,21 +28,23 @@
   outline: none;
   transition: color 0.15s, background 0.15s;
   font-weight: 500;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
-.search-input:focus {
+.searchInput:focus {
   color: var(--text);
   background: var(--bg-hover);
   border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.1);
 }
 
-.search-input::placeholder {
+.searchInput::placeholder {
   color: var(--text-muted);
   font-style: italic;
 }
 
-.toggle-filters-btn,
-.reset-filters-btn {
+.toggleFiltersBtn,
+.resetFiltersBtn {
   padding: 8px 16px;
   background: var(--bg);
   border: 1px solid var(--border);
@@ -53,25 +55,28 @@
   cursor: pointer;
   transition: color 0.15s, background 0.15s;
   white-space: nowrap;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
-.toggle-filters-btn:hover,
-.reset-filters-btn:hover {
+.toggleFiltersBtn:hover,
+.resetFiltersBtn:hover {
   color: var(--text);
   background: var(--bg-hover);
 }
 
-.toggle-filters-btn:active,
-.reset-filters-btn:active {
+.toggleFiltersBtn:active,
+.resetFiltersBtn:active {
   background: var(--accent);
   color: white;
 }
 
-.filters-content {
+.filtersContent {
   margin-top: 16px;
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 16px;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  align-items: center;
+  justify-content: center;
   animation: slideDown 0.3s ease;
 }
 
@@ -86,7 +91,7 @@
   }
 }
 
-.filter-group {
+.filterGroup {
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -95,14 +100,19 @@
   border-radius: 8px;
   border: 1px solid var(--border);
   transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  align-items: center;
+  width: 100%;
+  max-width: 400px;
 }
 
-.filter-group:hover {
+.filterGroup:hover {
   background: var(--bg-hover);
   border-color: var(--accent);
+  box-shadow: 0 2px 4px rgba(124, 58, 237, 0.1);
 }
 
-.filter-group label {
+.filterGroup label {
   font-size: 13px;
   color: var(--text-muted);
   font-weight: 500;
@@ -111,15 +121,18 @@
   letter-spacing: 0.5px;
 }
 
-.range-inputs {
+.rangeInputs {
   display: flex;
   align-items: center;
   gap: 8px;
+  width: 100%;
+  justify-content: center;
 }
 
-.range-inputs input {
+.rangeInputs input {
   flex: 1;
-  padding: 8px 10px;
+  flex-grow: 1;
+  padding: 8px 8px;
   background: var(--bg);
   border: 1px solid var(--border);
   border-radius: 6px;
@@ -128,48 +141,51 @@
   outline: none;
   transition: all 0.2s ease;
   font-weight: 500;
+  min-width: 80px;
 }
 
-.range-inputs input:focus {
+.rangeInputs input:focus {
   background: var(--bg-hover);
   border-color: var(--accent);
   box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.1);
 }
 
-.range-inputs span {
+.rangeInputs span {
   color: var(--text-muted);
   font-weight: 600;
   font-size: 14px;
+  width: 10px;
+  text-align: center;
 }
 
-.range-inputs input::placeholder {
+.rangeInputs input::placeholder {
   color: var(--text-muted);
   font-size: 11px;
 }
 
 /* Адаптивность */
 @media (max-width: 768px) {
-  .filters-header {
+  .filtersHeader {
     flex-direction: column;
     align-items: stretch;
     gap: 12px;
   }
   
-  .search-input {
+  .searchInput {
     min-width: auto;
   }
   
-  .filters-content {
+  .filtersContent {
     grid-template-columns: 1fr;
     gap: 12px;
   }
   
-  .range-inputs {
+  .rangeInputs {
     flex-wrap: wrap;
     gap: 6px;
   }
   
-  .range-inputs input {
+  .rangeInputs input {
     min-width: 70px;
     font-size: 12px;
   }

@@ -29,9 +29,33 @@ const DEFAULT_FILTERS: CoinFilters = {
 
 export function CoinFilters({ onFiltersChange, onSearchChange, coins }: CoinFiltersProps) {
   const { coinFilters: savedFilters, saveCoinFilters } = useScreenerStore()
-  const [filters, setFilters] = useState<CoinFilters>(savedFilters || DEFAULT_FILTERS)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [isExpanded, setIsExpanded] = useState(false)
+  
+  // Загружаем фильтры из localStorage при инициализации
+  const [filters, setFilters] = useState<CoinFilters>(() => {
+    try {
+      const stored = localStorage.getItem('coin-filters')
+      if (stored) {
+        return JSON.parse(stored)
+      }
+    } catch (e) {}
+    return savedFilters || DEFAULT_FILTERS
+  })
+  
+  const [searchTerm, setSearchTerm] = useState(() => {
+    try {
+      return localStorage.getItem('coin-search-term') || ''
+    } catch (e) {
+      return ''
+    }
+  })
+  
+  const [isExpanded, setIsExpanded] = useState(() => {
+    try {
+      return localStorage.getItem('coin-filters-expanded') === 'true'
+    } catch (e) {
+      return false
+    }
+  })
 
   // Calculate max values from current coins
   const maxVolume = Math.max(...coins.map(c => c.volume24hUsd), 1000000)
@@ -40,11 +64,26 @@ export function CoinFilters({ onFiltersChange, onSearchChange, coins }: CoinFilt
   useEffect(() => {
     onFiltersChange(filters)
     saveCoinFilters(filters)
+    // Сохраняем в localStorage
+    try {
+      localStorage.setItem('coin-filters', JSON.stringify(filters))
+    } catch (e) {}
   }, [filters, onFiltersChange, saveCoinFilters])
 
   useEffect(() => {
     onSearchChange(searchTerm)
+    // Сохраняем поиск в localStorage
+    try {
+      localStorage.setItem('coin-search-term', searchTerm)
+    } catch (e) {}
   }, [searchTerm, onSearchChange])
+
+  useEffect(() => {
+    // Сохраняем состояние expanded в localStorage
+    try {
+      localStorage.setItem('coin-filters-expanded', isExpanded.toString())
+    } catch (e) {}
+  }, [isExpanded])
 
   const handleFilterChange = (key: keyof CoinFilters, value: number) => {
     setFilters(prev => ({ ...prev, [key]: value }))
@@ -53,6 +92,21 @@ export function CoinFilters({ onFiltersChange, onSearchChange, coins }: CoinFilt
   const resetFilters = () => {
     setFilters(DEFAULT_FILTERS)
     setSearchTerm('')
+    // Очищаем localStorage
+    try {
+      localStorage.removeItem('coin-filters')
+      localStorage.removeItem('coin-search-term')
+    } catch (e) {}
+  }
+
+  // Функции для конвертации объема
+  const volumeToMillions = (volume: number) => {
+    return volume ? (volume / 1000000).toFixed(1) : ''
+  }
+
+  const volumeFromMillions = (millions: string) => {
+    const num = parseFloat(millions)
+    return isNaN(num) ? 0 : num * 1000000
   }
 
   return (
@@ -84,25 +138,25 @@ export function CoinFilters({ onFiltersChange, onSearchChange, coins }: CoinFilt
       {isExpanded && (
         <div className={s.filtersContent}>
           <div className={s.filterGroup}>
-            <label>Объём (24h):</label>
+            <label>Объём (24h) млн$:</label>
             <div className={s.rangeInputs}>
               <input
                 type="number"
                 placeholder="Мин"
-                value={filters.volumeMin || ''}
-                onChange={(e) => handleFilterChange('volumeMin', Number(e.target.value))}
+                value={volumeToMillions(filters.volumeMin)}
+                onChange={(e) => handleFilterChange('volumeMin', volumeFromMillions(e.target.value))}
                 min="0"
-                step="100000"
+                step="0.1"
               />
               <span>-</span>
               <input
                 type="number"
                 placeholder="Макс"
-                value={filters.volumeMax || ''}
-                onChange={(e) => handleFilterChange('volumeMax', Number(e.target.value))}
+                value={volumeToMillions(filters.volumeMax)}
+                onChange={(e) => handleFilterChange('volumeMax', volumeFromMillions(e.target.value))}
                 min="0"
-                max={maxVolume}
-                step="100000"
+                max={volumeToMillions(maxVolume)}
+                step="0.1"
               />
             </div>
           </div>
