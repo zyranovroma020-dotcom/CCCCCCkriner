@@ -82,7 +82,31 @@ export type KlineInterval = '1' | '3' | '5' | '15' | '30' | '60' | '120' | '240'
 export type KlineCandle = [string, string, string, string, string, string, string]
 // [startTime, open, high, low, close, volume, turnover]
 
-export function getKline(symbol: string, interval: KlineInterval, limit = 200): Promise<{ list: KlineCandle[] }> {
+export function getKline(symbol: string, interval: KlineInterval, limit?: number): Promise<{ list: KlineCandle[] }> {
+  // Автоматически определяем количество свечей в зависимости от таймфрейма
+  if (!limit) {
+    const intervalMinutes = intervalMs(interval) / (60 * 1000)
+    if (intervalMinutes >= 60 * 24) { // Дневные - 200 свечей (~200 дней)
+      limit = 200
+    } else if (intervalMinutes >= 60 * 4) { // 4 часовые - 200 свечей (~800 часов ~ 33 дня)
+      limit = 200
+    } else if (intervalMinutes >= 60) { // Часовые - 200 свечей (~200 часов ~ 8 дней)
+      limit = 200
+    } else if (intervalMinutes >= 15) { // 15 минут - 200 свечей (~50 часов ~ 2 дня)
+      limit = 200
+    } else { // Меньшие таймфреймы - 200 свечей
+      limit = 200
+    }
+  }
+  
+  // Для больших таймфреймов увеличиваем лимит, чтобы получить больше данных
+  const intervalMinutes = intervalMs(interval) / (60 * 1000)
+  if (intervalMinutes >= 60 * 24) { // Для дневных и выше
+    limit = Math.max(limit, 500) // Минимум 500 свечей для дневных
+  } else if (intervalMinutes >= 60) { // Для часовых и выше
+    limit = Math.max(limit, 300) // Минимум 300 свечей для часовых
+  }
+  
   const end = Date.now()
   const start = end - limit * intervalMs(interval)
   return bybitWithRetry<{ symbol: string; category: string; list: KlineCandle[] }>('/market/kline', {
@@ -91,7 +115,7 @@ export function getKline(symbol: string, interval: KlineInterval, limit = 200): 
     interval,
     start: String(start),
     end: String(end),
-    limit: String(limit),
+    limit: String(Math.min(limit, 1000)), // Bybit ограничивает до 1000
   })
 }
 
