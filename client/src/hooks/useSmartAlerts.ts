@@ -313,7 +313,10 @@ export function useSmartAlerts() {
 
   const sendTelegramNotification = async (chatId: string, message: string) => {
     try {
-      await fetch('/api/notify', {
+      const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+      const url = isDev ? '/api/notify' : `${window.location.origin}/api/notify`
+      
+      await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ telegramChatId: chatId, text: message }),
